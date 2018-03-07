@@ -13,10 +13,8 @@ namespace Hangfire.LogProvider.Splunk
         /// Tries to set up Splunk logging configuration.
         /// </summary>
         /// <param name="configuration">Instance of <see cref="IGlobalConfiguration"/>.</param>
-        /// <param name="disposable">SplunkLogProvider instance contains HttpClient so it must be disposed.</param>
-        public static IGlobalConfiguration UseSplunkLogProvider(this IGlobalConfiguration configuration, out IDisposable disposable)
+        public static IGlobalConfiguration UseSplunkLogProvider(this IGlobalConfiguration configuration)
         {
-            disposable = null;
             var splunkConfig = TryGetSplungLogProviderSection();
 
             if (splunkConfig == null)
@@ -25,13 +23,10 @@ namespace Hangfire.LogProvider.Splunk
             if (!Uri.IsWellFormedUriString(splunkConfig.BaseUrl, UriKind.Absolute))
                 return configuration;
 
-            if (string.IsNullOrWhiteSpace(splunkConfig.Token))
-                return configuration;
-
-            var provider = new SplunkLogProvider(splunkConfig);
-            disposable = provider;
-
-            return configuration.UseLogProvider(provider);
+            return 
+                string.IsNullOrWhiteSpace(splunkConfig.Token) 
+                    ? configuration 
+                    : configuration.UseLogProvider(new SplunkLogProvider(splunkConfig));
         }
 
         private static SplunkLogProviderSection TryGetSplungLogProviderSection()

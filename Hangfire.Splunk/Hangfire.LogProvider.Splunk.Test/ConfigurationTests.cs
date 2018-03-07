@@ -1,8 +1,8 @@
-﻿using System;
-using System.Configuration;
-using System.Diagnostics;
+﻿using System.Configuration;
+using Hangfire.Common;
 using Hangfire.Logging;
 using Hangfire.LogProvider.Splunk.Configuration;
+using Hangfire.SqlServer;
 using Xunit;
 
 namespace Hangfire.LogProvider.Splunk.Test
@@ -24,36 +24,39 @@ namespace Hangfire.LogProvider.Splunk.Test
         }
 
         [Fact]
-        public void ShouldDisposeSplunkLogProvider()
+        public void ShouldRun()
         {
-            GlobalConfiguration.Configuration
-                .UseSplunkLogProvider(out var disposable);
-
-            disposable.Dispose();
-
-            Assert.IsType<SplunkLogProvider>(disposable);
-            var isDisposed = (bool) disposable.GetType().GetProperty("Disposed").GetValue(disposable);
-            Assert.True(isDisposed);
-        }
-
-        [Fact(Skip = "ShouldDisposeSplunkProvider and this one cannot run in parallel.")]
-        public void ShouldThrowObjectDisposedException()
-        {
-            Assert.Throws<AggregateException>(() => TestCode());
+            TestCode();
         }
 
         private static void TestCode()
         {
+            var storage = new SqlServerStorage("Server=localhost;Initial Catalog=NetEntCasino.Job.Database;User ID=sa;Password=Password1!", new SqlServerStorageOptions {PrepareSchemaIfNecessary = false});
             GlobalConfiguration.Configuration
-                .UseSqlServerStorage("Server=localhost;Initial Catalog=Jobs;User ID=sa;Password=Password1!")
-                .UseSplunkLogProvider(out var disposable);
+                .UseSplunkLogProvider()
+                .UseStorage(storage);
+
+            var components = storage.GetComponents();
+            var connection = storage.GetConnection();
+            var api = storage.GetMonitoringApi();
 
             using (new BackgroundJobServer())
             {
-                RecurringJob.AddOrUpdate("TestJob", () => Debug.WriteLine("Testing testint"), Cron.Yearly);
-                RecurringJob.Trigger("TestJob");
+                var manager = new RecurringJobManager(storage);
 
-                disposable.Dispose();
+                manager.AddOrUpdate("42", new Job(typeof(TestJob).GetMethod("Run")), Cron.Minutely());
+                manager.Trigger("TestJob");
+
+                var j = api.JobDetails("42");
+                var job = connection.GetStateData("42");
+                Assert.NotNull(job);
+            }
+        }
+
+        public class TestJob
+        {
+            public void Run()
+            {
             }
         }
     }

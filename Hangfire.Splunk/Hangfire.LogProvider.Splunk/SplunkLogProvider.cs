@@ -11,16 +11,11 @@ namespace Hangfire.LogProvider.Splunk
     /// <summary>
     /// Represents the implementation of <see cref="T:Hangfire.Logging.ILogProvider" /> that uses Splunk.
     /// </summary>
-    public class SplunkLogProvider : ILogProvider, IDisposable
+    public class SplunkLogProvider : ILogProvider
     {
         private static HttpClient _client = new HttpClient();
 
         private readonly SplunkLogProviderSection _configuration;
-
-        /// <summary>
-        /// Gets the flag which determines if the object has beend disposed.
-        /// </summary>
-        public bool Disposed { get; internal set; }
 
         /// <summary>
         /// Initializes new instance of <see cref="SplunkLogProvider"/>.
@@ -28,9 +23,6 @@ namespace Hangfire.LogProvider.Splunk
         /// <param name="configuration">Instance of <see cref="SplunkLogProviderSection"/>.</param>
         public SplunkLogProvider(SplunkLogProviderSection configuration)
         {
-            if(Disposed)
-                throw new ObjectDisposedException(nameof(_client));
-
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             _client = InitializeClient(_configuration);
@@ -44,30 +36,6 @@ namespace Hangfire.LogProvider.Splunk
         public ILog GetLogger(string name)
         {
             return new SplunkLogger(_configuration.LoggingLevel);
-        }
-
-        /// <summary>
-        /// Dispose
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if(Disposed)
-                return;
-
-            if (disposing)
-            {
-                _client?.Dispose();
-            }
-
-            Disposed = true;
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         private static HttpClient InitializeClient(SplunkLogProviderSection configuration)
@@ -101,7 +69,7 @@ namespace Hangfire.LogProvider.Splunk
                 try
                 {
                     content = new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json");
-                    using (var request = new HttpRequestMessage(HttpMethod.Post, "/services/collector"))
+                    using (var request = new HttpRequestMessage(HttpMethod.Post, "/services/collector/event"))
                     {
                         request.Content = content;
                         content = null;

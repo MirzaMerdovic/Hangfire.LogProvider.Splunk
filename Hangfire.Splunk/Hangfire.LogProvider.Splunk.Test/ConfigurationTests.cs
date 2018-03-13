@@ -1,8 +1,7 @@
 ﻿using System.Configuration;
-using Hangfire.Common;
+using System.Threading.Tasks;
 using Hangfire.Logging;
 using Hangfire.LogProvider.Splunk.Configuration;
-using Hangfire.SqlServer;
 using Xunit;
 
 namespace Hangfire.LogProvider.Splunk.Test
@@ -21,43 +20,29 @@ namespace Hangfire.LogProvider.Splunk.Test
             Assert.False(string.IsNullOrWhiteSpace(splunkConfiguration.BaseUrl));
             Assert.False(string.IsNullOrWhiteSpace(splunkConfiguration.Token));
             Assert.Equal(LogLevel.Trace, splunkConfiguration.LoggingLevel);
+            Assert.Equal("Hangfire.LogProvider.Splunk.Test", splunkConfiguration.Source);
+            Assert.Equal("_json", splunkConfiguration.SourceType);
+            Assert.Equal(3, splunkConfiguration.BucketSize);
         }
 
         [Fact]
         public void ShouldRun()
         {
-            TestCode();
+            ILogProvider logProvider = new SplunkLogProvider((SplunkLogProviderSection)ConfigurationManager.GetSection("SplunkLogProvider"));
+            ILog logger = logProvider.GetLogger(null);
+            logger.Warn("See you in Splunk search 1-:");
+            logger.Warn("See you in Splunk search 2-:");
+            logger.Warn("See you in Splunk search 3-:");
         }
 
-        private static void TestCode()
+        [Fact]
+        public async Task ShouldFlush()
         {
-            var storage = new SqlServerStorage("Server=localhost;Initial Catalog=NetEntCasino.Job.Database;User ID=sa;Password=Password1!", new SqlServerStorageOptions {PrepareSchemaIfNecessary = false});
-            GlobalConfiguration.Configuration
-                .UseSplunkLogProvider()
-                .UseStorage(storage);
+            ILogProvider logProvider = new SplunkLogProvider((SplunkLogProviderSection)ConfigurationManager.GetSection("SplunkLogProvider"));
+            ILog logger = logProvider.GetLogger(null);
+            logger.Warn("Flushing to Splunk");
 
-            var components = storage.GetComponents();
-            var connection = storage.GetConnection();
-            var api = storage.GetMonitoringApi();
-
-            using (new BackgroundJobServer())
-            {
-                var manager = new RecurringJobManager(storage);
-
-                manager.AddOrUpdate("42", new Job(typeof(TestJob).GetMethod("Run")), Cron.Minutely());
-                manager.Trigger("TestJob");
-
-                var j = api.JobDetails("42");
-                var job = connection.GetStateData("42");
-                Assert.NotNull(job);
-            }
-        }
-
-        public class TestJob
-        {
-            public void Run()
-            {
-            }
+            await SplunkLogProvider.Flush();
         }
     }
 }

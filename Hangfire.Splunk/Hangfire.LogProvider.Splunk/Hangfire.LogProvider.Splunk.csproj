@@ -73,7 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigurationExtensions.cs" />
-    <Compile Include="Configuration\SplunkLogProviderSection.cs" />
+    <Compile Include="Configuration\IConfigurationProvider.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="SplunkLogProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

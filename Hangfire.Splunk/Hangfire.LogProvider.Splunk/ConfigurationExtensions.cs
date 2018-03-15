@@ -1,6 +1,4 @@
-﻿using System;
-using System.Configuration;
-using Hangfire.LogProvider.Splunk.Configuration;
+﻿using Hangfire.LogProvider.Splunk.Configuration;
 
 namespace Hangfire.LogProvider.Splunk
 {
@@ -12,33 +10,14 @@ namespace Hangfire.LogProvider.Splunk
         /// <summary>
         /// Tries to set up Splunk logging configuration.
         /// </summary>
-        /// <param name="configuration">Instance of <see cref="IGlobalConfiguration"/>.</param>
-        public static IGlobalConfiguration UseSplunkLogProvider(this IGlobalConfiguration configuration)
+        /// <param name="globalConfiguration">Instance of <see cref="IGlobalConfiguration"/>.</param>
+        /// <param name="splunkConfiguration">Instance of <see cref="IConfigurationProvider"/>.</param>
+        public static IGlobalConfiguration UseSplunkLogProvider(this IGlobalConfiguration globalConfiguration, IConfigurationProvider splunkConfiguration)
         {
-            var splunkConfig = TryGetSplungLogProviderSection();
+            if (splunkConfiguration == null)
+                return globalConfiguration;
 
-            if (splunkConfig == null)
-                return configuration;
-
-            if (!Uri.IsWellFormedUriString(splunkConfig.BaseUrl, UriKind.Absolute))
-                return configuration;
-
-            return 
-                string.IsNullOrWhiteSpace(splunkConfig.Token) 
-                    ? configuration 
-                    : configuration.UseLogProvider(new SplunkLogProvider(splunkConfig));
-        }
-
-        private static SplunkLogProviderSection TryGetSplungLogProviderSection()
-        {
-            try
-            {
-                return (SplunkLogProviderSection)ConfigurationManager.GetSection("SplunkLogProvider");
-            }
-            catch
-            {
-                return null;
-            }
+            return globalConfiguration.UseLogProvider(new SplunkLogProvider(splunkConfiguration));
         }
     }
 }

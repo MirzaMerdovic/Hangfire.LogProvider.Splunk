@@ -80,12 +80,18 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="ConfigurationTests.cs" />
+    <Compile Include="ConfigurationProvider\ConfigurationTests.cs" />
+    <Compile Include="LogProvider\SplunkTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ConfigurationProvider\SplunkLogProviderSection.cs" />
+    <Compile Include="ConfigurationProvider\TestConfigurationProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hangfire.LogProvider.Splunk\Hangfire.LogProvider.Splunk.csproj">

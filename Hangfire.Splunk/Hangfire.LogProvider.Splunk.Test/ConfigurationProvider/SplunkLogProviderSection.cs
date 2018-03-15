@@ -1,7 +1,7 @@
-﻿using System.Configuration;
-using Hangfire.Logging;
+﻿using System;
+using System.Configuration;
 
-namespace Hangfire.LogProvider.Splunk.Configuration
+namespace Hangfire.LogProvider.Splunk.Test.ConfigurationProvider
 {
     /// <inheritdoc />
     /// <summary>
@@ -13,9 +13,9 @@ namespace Hangfire.LogProvider.Splunk.Configuration
         /// Gets or sets Splunk base URL value.
         /// </summary>
         [ConfigurationProperty(nameof(BaseUrl), IsRequired = false)]
-        public string BaseUrl
+        public Uri BaseUrl
         {
-            get => (string)this[nameof(BaseUrl)];
+            get => (Uri)this[nameof(BaseUrl)];
             set => this[nameof(BaseUrl)] = value;
         }
 
@@ -44,19 +44,6 @@ namespace Hangfire.LogProvider.Splunk.Configuration
         }
 
         /// <summary>
-        /// Gets or sets Splunk default field that identifies the source of an event, that is, where the event originated.
-        /// <remarks>
-        /// More info: https://docs.splunk.com/Splexicon:Source
-        /// </remarks>
-        /// </summary>
-        [ConfigurationProperty(nameof(Source), IsRequired = true)]
-        public string Source
-        {
-            get => (string)this[nameof(Source)];
-            set => this[nameof(Source)] = value;
-        }
-
-        /// <summary>
         /// Gets or sets the name of Splunk index. 
         /// Default value is 'main'
         /// <remarks>
@@ -74,10 +61,10 @@ namespace Hangfire.LogProvider.Splunk.Configuration
         /// Gets or sets the minimal allowed logging level.
         /// Default value is 'Warning'
         /// </summary>
-        [ConfigurationProperty(nameof(LoggingLevel), DefaultValue = LogLevel.Warn)]
-        public LogLevel LoggingLevel
+        [ConfigurationProperty(nameof(LoggingLevel), DefaultValue = "Warn")]
+        public string LoggingLevel
         {
-            get => (LogLevel)this[nameof(LoggingLevel)];
+            get => (string)this[nameof(LoggingLevel)];
             set => this[nameof(LoggingLevel)] = value;
         }
 
@@ -90,6 +77,17 @@ namespace Hangfire.LogProvider.Splunk.Configuration
         {
             get => (int)this[nameof(BucketSize)];
             set => this[nameof(BucketSize)] = value;
+        }
+
+        /// <summary>
+        /// Gets the flag that determine whether the dynamic log level switch functionality should be allowed or not.
+        /// Default value is 'true'
+        /// </summary>
+        [ConfigurationProperty(nameof(AllowDynamicLogLevelSwitch), DefaultValue = true)]
+        public bool AllowDynamicLogLevelSwitch
+        {
+            get => (bool)this[nameof(AllowDynamicLogLevelSwitch)];
+            set => this[nameof(AllowDynamicLogLevelSwitch)] = value;
         }
     }
 }
